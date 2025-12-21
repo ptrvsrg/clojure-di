@@ -1,17 +1,42 @@
-## My Project
+# DI-контейнер для Clojure
 
-TODO: Fill this README out!
+## Требования
 
-Be sure to:
+Необходимо реализовать DI-контейнер для Clojure, обеспечивающий поддержку:
 
-* Change the title in this README
-* Edit your repository description on GitHub
+1. внедрения зависимости по заданному протоколу (Clojure Protocol);
+2. конфигурации (также на Clojure), обеспечивающей:
 
-## Security
+    + управление жизненным циклом объектов (`Singleton` и `Prototype` );
+    + инициализацию полей для типов, объявленных через `defrecord`;
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+3. пользовательской инициализации/деинициализации объектов (по аналогии с
+аннотациями JavaEE `@PostConstruct` и `@PreDestroy`);
+4. (Опционально) функциональности контейнера так, чтобы поддерживалось внедрение экземпляров Java-классов через их интерфейсы;
+5. (Опционально) действия механизма на Java-код через стандартную аннотацию `javax.inject.Inject`.
 
-## License
+## Разработка
 
-This project is licensed under the Apache-2.0 License.
+### Предварительные условия
 
+- [Leiningen](https://leiningen.org/)
+
+### Сборка JAR
+
+```bash
+lein uberjar
+```
+
+### Тесты
+
+```bash
+lein test
+```
+
+## Сотрудничество
+
+См. [CONTRIBUTING](CONTRIBUTING.md).
+
+## Лицензия
+
+См. [Apache-2.0 License](LICENSE.md).

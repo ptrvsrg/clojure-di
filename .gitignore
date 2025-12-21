@@ -1,0 +1,54 @@
+# Clojure build artifacts
+target/
+classes/
+*.jar
+*.class
+
+# Dependency directories
+.cpcache/
+.m2/
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+.c9/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# REPL
+.nrepl-port
+.repl/
+.lein-*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Test coverage
+coverage/
+cov-html/
+
+# Built application
+dist/
+build/
+
+# Calva
+
+.calva/
