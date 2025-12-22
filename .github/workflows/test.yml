@@ -1,0 +1,130 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRIB: 'openjdk'
+  CLOJURE_VERSION: '1.12.3.1577'
+  LEININGEN_VERSION: '2.12.0'
+
+permissions:
+  contents: read
+
+jobs:
+  deps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: $JAVA_DISTRIB
+          java-version: $JAVA_VERSION
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@13.4
+        with:
+          cli: $CLOJURE_VERSION
+          lein: $LEININGEN_VERSION
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+            .cpcache
+          key: clj-deps-${{ hashFiles('project.clj') }}
+          restore-keys: cljdeps-
+      - name: Dependencies
+        run: lein deps
+  lint:
+    runs-on: ubuntu-latest
+    needs:
+      - deps
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: $JAVA_DISTRIB
+          java-version: $JAVA_VERSION
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@13.4
+        with:
+          cli: $CLOJURE_VERSION
+          lein: $LEININGEN_VERSION
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+            .cpcache
+          key: clj-deps-${{ hashFiles('project.clj') }}
+          restore-keys: cljdeps-
+      - name: Lint
+        run: lein clj-kondo
+  build:
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: $JAVA_DISTRIB
+          java-version: $JAVA_VERSION
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@13.4
+        with:
+          cli: $CLOJURE_VERSION
+          lein: $LEININGEN_VERSION
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+            .cpcache
+          key: clj-deps-${{ hashFiles('project.clj') }}
+          restore-keys: cljdeps-
+      - name: Build JAR
+        run: lein uberjar
+  unit:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: $JAVA_DISTRIB
+          java-version: $JAVA_VERSION
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@13.4
+        with:
+          cli: $CLOJURE_VERSION
+          lein: $LEININGEN_VERSION
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+            .cpcache
+          key: clj-deps-${{ hashFiles('project.clj') }}
+          restore-keys: cljdeps-
+      - name: Unit tests
+        run: lein test
