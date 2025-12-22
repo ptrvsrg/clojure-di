@@ -1,0 +1,34 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - 'v*.*.*'
+    - 'v*.*.*-RC*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Build
+        run: echo ${{ github.sha }} > Release.txt
+      - name: Test
+        run: cat Release.txt
+      - name: Determine if pre-release
+        id: prerelease
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          if [[ $TAG_NAME == *"-RC"* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Release.txt
+            LICENSE.md
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
