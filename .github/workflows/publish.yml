@@ -46,7 +46,7 @@ jobs:
       - name: Set version
         run: lein set-version ${{ steps.version.outputs.version }}
       - name: Import GPG Key
-        uses: crazy-max/ghaction-import-gpg@v1
+        uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
