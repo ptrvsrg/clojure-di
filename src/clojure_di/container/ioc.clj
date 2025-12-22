@@ -1,5 +1,4 @@
-(ns clojure-di.container.ioc
-  (:require [clojure.set :as set]))
+(ns clojure-di.container.ioc)
 
 ;;; --- Реестр и базовые операции ---
 
@@ -14,8 +13,9 @@
    :initializers {}
    :destructors {}})
 
-(defn- registry-atom []
+(defn- registry-atom
   "Создает и возвращает атом с начальным состоянием реестра."
+  []
   (atom initial-registry))
 
 (def ^:dynamic *registry*
@@ -31,7 +31,7 @@
    (-> registry
        (assoc-in [:components key] (assoc metadata :recipe recipe :key key))
        (cond->
-        ;; Простейшая эвристика: если у компонента есть конструктор,
+        ;; Если у компонента есть конструктор,
         ;; а у его зависимостей нет явных имен, сопоставляем их по позиции.
         (and (:dependencies metadata)
              (not (map? (:dependencies metadata))))
@@ -39,8 +39,9 @@
                    (zipmap (map (comp symbol name) (:dependencies metadata))
                            (:dependencies metadata)))))))
 
-(defn- unregister [registry key]
+(defn- unregister
   "Удаляет компонент из реестра."
+  [registry key]
   (-> registry
       (update :components dissoc key)
       (update :injections dissoc key)
@@ -49,9 +50,6 @@
 
 (defn- get-recipe [registry key]
   (get-in registry [:components key :recipe]))
-
-(defn- get-metadata [registry key]
-  (get-in registry [:components key]))
 
 ;;; --- Разрешение зависимостей ---
 
@@ -70,19 +68,19 @@
   "Получает экземпляр компонента по ключу, учитывая его жизненный цикл и зависимости."
   [registry key]
   (let [metadata       (get-in registry [:components key])
-       lifecycle      (:lifecycle metadata :prototype)
-       singleton-atom (:instance metadata)] ; nil для prototype или несуществующего singleton
+        lifecycle      (:lifecycle metadata :prototype)
+        singleton-atom (:instance metadata)] ; nil для prototype или несуществующего singleton
 
-   (case lifecycle
-     :singleton
-     ;; Проверяем сначала, есть ли уже сохраненный инстанс в реестре
-     (or (when singleton-atom @singleton-atom)
-         ;; Если нет, то создаем новый *и сохраняем его*
-         (create-instance registry key metadata))
+    (case lifecycle
+      :singleton
+      ;; Проверяем сначала, есть ли уже сохраненный инстанс в реестре
+      (or (when singleton-atom @singleton-atom)
+          ;; Если нет, то создаем новый *и сохраняем его*
+          (create-instance registry key metadata))
 
-     :prototype
-     ;; Всегда создаем новый инстанс
-     (create-instance registry key metadata))))
+      :prototype
+      ;; Всегда создаем новый инстанс
+      (create-instance registry key metadata))))
 
 (defn- create-instance
   "Создает новый экземпляр компонента, внедряя зависимости."
@@ -121,8 +119,9 @@
   ([key recipe metadata]
    (swap! *registry* register key recipe metadata)))
 
-(defn remove-component! [key]
+(defn remove-component!
   "Удаляет компонент из глобального реестра."
+  [key]
   (swap! *registry* unregister key))
 
 
@@ -130,13 +129,13 @@
   "Получает экземпляр компонента из глобального реестра по ключу."
   [key]
   (let [registry  @*registry*
-       metadata  (get-in registry [:components key])
-       lifecycle (:lifecycle metadata :prototype)
-       instance  (get-instance registry key)]
-   ;; Если это синглтон, сохраняем его в реестре после создания/получения.
-   (when (= lifecycle :singleton)
-     (swap! *registry* assoc-in [:components key :instance] (atom instance)))
-   instance))
+        metadata  (get-in registry [:components key])
+        lifecycle (:lifecycle metadata :prototype)
+        instance  (get-instance registry key)]
+    ;; Если это синглтон, сохраняем его в реестре после создания/получения.
+    (when (= lifecycle :singleton)
+      (swap! *registry* assoc-in [:components key :instance] (atom instance)))
+    instance))
 
 
 (defn set-injection!

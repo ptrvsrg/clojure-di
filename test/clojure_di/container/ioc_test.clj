@@ -1,6 +1,6 @@
 (ns clojure-di.container.ioc-test
-  (:require [clojure.test :refer :all]
-            [clojure-di.container.ioc :as ioc :refer [get-instance*]]))
+  (:require [clojure-di.container.ioc :as ioc :refer [get-instance*]]
+            [clojure.test :refer :all]))
 
 ;; Вспомогательные "заглушки" для тестов
 (defrecord TestRepo [])

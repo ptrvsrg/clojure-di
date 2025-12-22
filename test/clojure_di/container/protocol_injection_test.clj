@@ -1,6 +1,6 @@
 (ns clojure-di.container.protocol-injection-test
-  (:require [clojure.test :refer :all]
-            [clojure-di.core :refer :all]))
+  (:require [clojure-di.core :as core]
+            [clojure.test :refer :all]))
 
 ;; Определяем тестовый протокол и его реализацию
 (defprotocol Database
@@ -12,20 +12,20 @@
 
 (deftest test-protocol-injection
   (testing "can resolve a component by its protocol"
-    (clear-all!)
-    (add-component! :in-memory-db (fn [] (->InMemoryDb)))
-    (register-protocol-impl `Database :in-memory-db)
+    (core/clear-all!)
+    (core/add-component! :in-memory-db (fn [] (->InMemoryDb)))
+    (core/register-protocol-impl `Database :in-memory-db)
 
-    (let [db-instance (get-instance-for-protocol `Database)]
+    (let [db-instance (core/get-instance-for-protocol `Database)]
       (is (satisfies? Database db-instance))
       (is (= "Result of: SELECT * FROM users" (query db-instance "SELECT * FROM users")))))
 
   (testing "can use `defcomponent` macro for convenience"
-    (clear-all!)
-    (defcomponent :cache-db
+    (core/clear-all!)
+    (core/defcomponent :cache-db
       (->InMemoryDb)
       []
       {:implements [`Database]})
 
-    (let [db-instance (get-instance-for-protocol `Database)]
+    (let [db-instance (core/get-instance-for-protocol `Database)]
       (is (satisfies? Database db-instance)))))
