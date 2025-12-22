@@ -26,13 +26,13 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: $JAVA_DISTRIB
-          java-version: $JAVA_VERSION
+          distribution: ${{ env.JAVA_DISTRIB }}
+          java-version: ${{ env.JAVA_VERSION }}
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@13.4
         with:
-          cli: $CLOJURE_VERSION
-          lein: $LEININGEN_VERSION
+          cli: ${{ env.CLOJURE_VERSION }}
+          lein: ${{ env.LEININGEN_VERSION }}
       - name: Determine version
         id: version
         run: |
