@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -33,6 +33,16 @@ jobs:
         with:
           cli: ${{ env.CLOJURE_VERSION }}
           lein: ${{ env.LEININGEN_VERSION }}
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+            .cpcache
+          key: clj-deps-${{ hashFiles('project.clj') }}
+          restore-keys: clj-deps-
       - name: Determine version
         id: version
         run: |
@@ -45,11 +55,13 @@ jobs:
           fi
       - name: Set version
         run: lein set-version ${{ steps.version.outputs.version }}
-      - name: Configure GPG Key
-        run: echo -n "$GPG_SIGNING_KEY" | base64 --decode | gpg --import
-        env:
-          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+      - name: Import GPG Key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_SIGNING_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
       - name: Publish package
         run: lein deploy github
         env:
+          CI_RW_USER: ${{ secrets.CI_RW_USER }}
           CI_RW_TOKEN: ${{ secrets.CI_RW_TOKEN }}

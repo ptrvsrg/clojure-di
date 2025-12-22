@@ -6,8 +6,11 @@ on:
     - 'v*.*.*'
     - 'v*.*.*-RC*'
 
+permissions:
+  contents: write
+
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,3 +35,4 @@ jobs:
             Release.txt
             LICENSE.md
           prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
+          token: ${{ secrets.CI_RW_TOKEN }}

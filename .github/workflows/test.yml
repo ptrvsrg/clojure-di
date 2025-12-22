@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -47,7 +47,7 @@ jobs:
       - deps
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -76,7 +76,7 @@ jobs:
       - lint
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -105,7 +105,7 @@ jobs:
       - build
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Setup Java
         uses: actions/setup-java@v3
         with:

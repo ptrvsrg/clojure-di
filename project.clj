@@ -2,7 +2,7 @@
   :description "A Clojure library for DI container"
   :url "https://github.com/ptrvsrg/clojure-di"
   :repositories [["github" {:url      "https://maven.pkg.github.com/ptrvsrg/clojure-di"
-                            :username "private-token"
+                            :username :env/CI_RW_USER
                             :password :env/CI_RW_TOKEN}]]
   :license {:name "Apache 2.0"
             :url "https://www.apache.org/licenses/LICENSE-2.0"}
