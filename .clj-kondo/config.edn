@@ -1,46 +1,19 @@
-{:linters {:unused-namespace
-           {:exclude [clj-kondo.impl.rewrite-clj-patch
-                      rewrite-clj.parser.core
-                      clj-kondo.impl.var-info-gen
-                      clj-kondo.impl.node.seq
-                      clj-kondo.impl.profiler
-                      clj-kondo.impl.utils]}
+{:linters {:unused-namespace {:level :warning}
            :unused-referred-var
-           {:exclude {clojure.test [is deftest testing]
-                      clj-kondo.impl.utils [err]}}
-           :type-mismatch
-           {:level :warning
-            :namespaces
-            {clj-kondo.core {print! {:arities {1 {:args [:map]
-                                                  :ret :nil}}}
-                             run! {:arities {1 {:args [:map]
-                                                :ret :map}}}}
-             clj-kondo.impl.config #include "../src/clj_kondo/impl/config.types.edn"
-             clj-kondo.impl.findings #include "../src/clj_kondo/impl/findings.types.edn"}}
+           {:exclude {clojure.test [is deftest testing]}}
+           :type-mismatch {:level :warning}
            :reduce-without-init {:level :warning}
            :missing-docstring {:level :off}
            :refer-all {:level :off}
            :unsorted-required-namespaces {:level :warning}
            :unsorted-imports {:level :warning}
-           ;; for  nubank/matcher-combinators
+           ;; for nubank/matcher-combinators
            :unresolved-symbol {:exclude [(clojure.test/is [match?])]}
            :def-fn {:level :warning}
            :self-requiring-namespace {:level :warning}
            :equals-expected-position {:level :warning}
            :discouraged-var {clojure.core/memoize {:message "Creates memory leaks, slow with key collections"}}}
- :lint-as {me.raynes.conch/programs clojure.core/declare
-           me.raynes.conch/let-programs clojure.core/let
-           datalog.parser.type/deftrecord clojure.core/defrecord
-           clj-kondo.impl.rewrite-clj.potemkin/defprotocol+ clojure.core/defprotocol
-           clj-kondo.impl.rewrite-clj.potemkin/import-vars potemkin/import-vars
-           clj-kondo.test-utils/with-temp-dir clojure.core/let
-           clojure.data.json/codepoint-case clojure.core/case
-           babashka.fs/with-temp-dir clojure.core/let}
- :output {:exclude-files ["src/clj_kondo/impl/rewrite_clj_patch.clj"]}
- :hooks {:analyze-call {clj-kondo.impl.utils/one-of hooks.one-of/one-of}}
- ;; we don't use this in clj-kondo since we need to exclude certain configs for testing
- :auto-load-configs false
+ :auto-load-configs true
  :ns-groups [{:pattern ".*-test"
               :name test-namespaces}]
- :config-in-ns {test-namespaces {:linters {:warn-on-reflection {:level :off}}}}
- :config-paths ["imports/borkdude/deflet"]}
+ :config-in-ns {test-namespaces {:linters {:warn-on-reflection {:level :off}}}}}
