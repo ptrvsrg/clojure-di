@@ -38,7 +38,7 @@ jobs:
             ~/.deps.clj
             .cpcache
           key: clj-deps-${{ hashFiles('project.clj') }}
-          restore-keys: cljdeps-
+          restore-keys: clj-deps-
       - name: Dependencies
         run: lein deps
   lint:
@@ -67,7 +67,7 @@ jobs:
             ~/.deps.clj
             .cpcache
           key: clj-deps-${{ hashFiles('project.clj') }}
-          restore-keys: cljdeps-
+          restore-keys: clj-deps-
       - name: Lint
         run: lein clj-kondo
   build:
@@ -96,7 +96,7 @@ jobs:
             ~/.deps.clj
             .cpcache
           key: clj-deps-${{ hashFiles('project.clj') }}
-          restore-keys: cljdeps-
+          restore-keys: clj-deps-
       - name: Build JAR
         run: lein uberjar
   unit:
@@ -125,6 +125,6 @@ jobs:
             ~/.deps.clj
             .cpcache
           key: clj-deps-${{ hashFiles('project.clj') }}
-          restore-keys: cljdeps-
+          restore-keys: clj-deps-
       - name: Unit tests
         run: lein test
