@@ -27,7 +27,7 @@
 lein uberjar
 ```
 
-### Тесты
+### Запуск тестов
 
 ```bash
 lein test
