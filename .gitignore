@@ -52,3 +52,11 @@ build/
 # Calva
 
 .calva/
+
+# clj-kondo
+
+.clj-kondo/.cache
+
+# lsp
+
+.lsp/.cache

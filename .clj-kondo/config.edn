@@ -1,0 +1,19 @@
+{:linters {:unused-namespace {:level :warning}
+           :unused-referred-var
+           {:exclude {clojure.test [is deftest testing]}}
+           :type-mismatch {:level :warning}
+           :reduce-without-init {:level :warning}
+           :missing-docstring {:level :off}
+           :refer-all {:level :off}
+           :unsorted-required-namespaces {:level :warning}
+           :unsorted-imports {:level :warning}
+           ;; for nubank/matcher-combinators
+           :unresolved-symbol {:exclude [(clojure.test/is [match?])]}
+           :def-fn {:level :warning}
+           :self-requiring-namespace {:level :warning}
+           :equals-expected-position {:level :warning}
+           :discouraged-var {clojure.core/memoize {:message "Creates memory leaks, slow with key collections"}}}
+ :auto-load-configs true
+ :ns-groups [{:pattern ".*-test"
+              :name test-namespaces}]
+ :config-in-ns {test-namespaces {:linters {:warn-on-reflection {:level :off}}}}}
