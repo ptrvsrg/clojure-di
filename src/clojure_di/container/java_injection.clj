@@ -22,17 +22,35 @@
    Автоматически регистрирует созданный bean как реализацию всех его интерфейсов."
   ([class] (register-java-bean! class (keyword (.getName class))))
   ([class component-key]
-   (let [deps (resolve-constructor-dependencies (find-injectable-constructor class))
+   (let [constructor (find-injectable-constructor class)
+         deps (resolve-constructor-dependencies constructor)
          bean-fn (fn [& ds]
-                   (let [constructor (find-injectable-constructor class)]
-                       (.newInstance constructor (into-array Object ds))))]
+                   (.newInstance constructor (into-array Object ds)))]
      ;; 1. Регистрируем компонент под его основным ключом (например, :my-calc)
      (ioc/add-component! component-key bean-fn {:dependencies deps})
 
      ;; 2. Регистрируем этот компонент как реализацию ВСЕХ его интерфейсов.
      (doseq [interface (.getInterfaces class)]
        ;; 2.1. Создаем алиас в ОСНОВНОМ реестре для разрешения зависимостей в Java-классах
-       (ioc/add-component! (keyword (.getName interface)) bean-fn)
+       (ioc/add-component! (keyword (.getName interface)) bean-fn {:dependencies deps})
        ;; 2.2. Создаем алиас в РЕЕСТРЕ ПРОТОКОЛОВ для разрешения зависимостей в Clojure-компонентах
        (pinj/register-protocol-impl (str (.getName interface)) component-key)))))
 
+(defmacro def-java-interface-protocol
+  "Создает Clojure-протокол, который служит мостом к Java-интерфейсу.
+   `protocol-name`: Имя создаваемого Clojure-протокола.
+   `interface-class`: Полное имя класса Java-интерфейса (как символ или строка)."
+  [protocol-name interface-class]
+  (let [^Class interface (if (string? interface-class)
+                           (Class/forName interface-class)
+                           (eval interface-class))
+        methods          (for [^java.lang.reflect.Method m (.getMethods interface)
+                               :let [method-name (symbol (.getName m))
+                                     param-count (alength (.getParameterTypes m))
+                                     ;; Генерируем аргументы для метода протокола: [this p1 p2 ...]
+                                     args        (vec (cons 'this (take param-count (repeatedly gensym))))]]
+                           ;; Тело метода: делегируем вызов Java-объекту
+                           `(~method-name ~args
+                                          (. ~(first args) ~method-name ~@(rest args))))]
+    `(defprotocol ~protocol-name
+       ~@methods)))
