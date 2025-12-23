@@ -5,8 +5,10 @@
             [clojure.test :refer :all])
   (:import [com.example.di Calculator DataProcessor SimpleCalculator]))
 
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (jinj/def-java-interface-protocol CalculatorProtocol com.example.di.Calculator)
 
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (extend SimpleCalculator
   CalculatorProtocol
   {:add (fn [this a b] (.add ^Calculator this a b))
@@ -68,14 +70,17 @@
     ;;    - Передать `SimpleCalculator` (как `Calculator`) в конструктор `::clojure-client`
     (let [client (di/get-instance ::clojure-client)]
       (is (= "ClojureComponent" (:type client)))
-      (is (satisfies? CalculatorProtocol (:service client))))))
+      (is #_{:clj-kondo/ignore [:unresolved-symbol]}
+       (satisfies? CalculatorProtocol (:service client))))))
 
 (deftest test-protocol-bridge-functionality
   (testing "Clojure code can call protocol methods on a Java implementation"
     (di/clear-all!)
     (di/register-java-bean! SimpleCalculator :calc)
     (let [calc-instance (di/get-instance :calc)]
-      (is (satisfies? CalculatorProtocol calc-instance))
+      (is #_{:clj-kondo/ignore [:unresolved-symbol]}
+       (satisfies? CalculatorProtocol calc-instance))
       ;; Теперь этот вызов будет работать
-      (is (= 5.0 (add calc-instance 2.0 3.0))))))
+      (is (= 5.0 #_{:clj-kondo/ignore [:unresolved-symbol]}
+             (add calc-instance 2.0 3.0))))))
 
