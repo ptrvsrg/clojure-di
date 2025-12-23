@@ -56,26 +56,26 @@
       (is (= 42 @inst))))
 
   (testing "component lifecycle management"
-     (ioc/add-component! ::temp (fn [] "temp-value"))
-     (ioc/remove-component! ::temp)
-     (is (nil? (get-in @ioc/*registry* [:components ::temp])))
+    (ioc/add-component! ::temp (fn [] "temp-value"))
+    (ioc/remove-component! ::temp)
+    (is (nil? (get-in @ioc/*registry* [:components ::temp])))
 
-     (ioc/add-component! ::temp1 (fn [] "val1"))
-     (ioc/add-component! ::temp2 (fn [] "val2") {:lifecycle :singleton})
-     (ioc/set-injection! ::temp2 {})
-     (ioc/set-initializer! ::temp2 (fn [x] x))
-     (ioc/set-destructor! ::temp2 (fn [x] x))
-     (ioc/clear-registry!)
-     (is (= (count (:components @ioc/*registry*)) 0))
-     (is (= (count (:injections @ioc/*registry*)) 0))
-     (is (= (count (:initializers @ioc/*registry*)) 0))
-     (is (= (count (:destructors @ioc/*registry*)) 0)))
+    (ioc/add-component! ::temp1 (fn [] "val1"))
+    (ioc/add-component! ::temp2 (fn [] "val2") {:lifecycle :singleton})
+    (ioc/set-injection! ::temp2 {})
+    (ioc/set-initializer! ::temp2 (fn [x] x))
+    (ioc/set-destructor! ::temp2 (fn [x] x))
+    (ioc/clear-registry!)
+    (is (= (count (:components @ioc/*registry*)) 0))
+    (is (= (count (:injections @ioc/*registry*)) 0))
+    (is (= (count (:initializers @ioc/*registry*)) 0))
+    (is (= (count (:destructors @ioc/*registry*)) 0)))
 
-   (testing "clear-registry! does not call destructors for simplicity"
-     (ioc/clear-registry!)
-     (let [destructor-called? (atom false)]
-       (ioc/add-component! ::another (fn [] "val"))
-       (ioc/set-destructor! ::another (fn [_] (reset! destructor-called? true)))
-       (get-instance* ::another)
-       (ioc/clear-registry!)
-       (is (false? @destructor-called?) "Destructor should NOT be called on clear-registry!"))))
+  (testing "clear-registry! does not call destructors for simplicity"
+    (ioc/clear-registry!)
+    (let [destructor-called? (atom false)]
+      (ioc/add-component! ::another (fn [] "val"))
+      (ioc/set-destructor! ::another (fn [_] (reset! destructor-called? true)))
+      (get-instance* ::another)
+      (ioc/clear-registry!)
+      (is (false? @destructor-called?) "Destructor should NOT be called on clear-registry!"))))

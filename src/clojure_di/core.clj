@@ -1,5 +1,6 @@
 (ns clojure-di.core
   (:require [clojure-di.container.ioc :as ioc]
+            [clojure-di.container.java-injection :as jinj]
             [clojure-di.container.protocol-injection :as pinj]))
 
 ;; Реэкспорт основных функций
@@ -7,6 +8,7 @@
 (def get-instance ioc/get-instance*)
 (def get-instance-for-protocol pinj/get-instance-for-protocol)
 (def register-protocol-impl pinj/register-protocol-impl)
+(def register-java-bean! jinj/register-java-bean!)
 
 ;; Вспомогательный макрос для удобства
 (defmacro defcomponent

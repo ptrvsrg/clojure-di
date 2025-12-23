@@ -3,11 +3,7 @@
 ;;; --- Реестр и базовые операции ---
 
 (def ^:private initial-registry
-  "Начальное состояние реестра компонентов.
-  Структура: {:components    {:component-key {:recipe ... :metadata ... }}
-              :injections    {:component-key {:field-sym target-key ...}}
-              :initializers  {:component-key init-fn}
-              :destructors   {:component-key destroy-fn}}"
+  "Начальное состояние реестра компонентов."
   {:components {}
    :injections {}
    :initializers {}
@@ -19,8 +15,7 @@
   (atom initial-registry))
 
 (def ^:dynamic *registry*
-  "Динамическая переменная, хранящая атом с реестром компонентов.
-  Позволяет иметь изолированные контейнеры для тестов."
+  "Динамическая переменная, хранящая атом с реестром компонентов."
   (registry-atom))
 
 (defn register
@@ -59,7 +54,6 @@
 (defn- resolve-dependencies [registry dep-map]
   (reduce-kv
    (fn [m field-sym target-key]
-     ; Используем новый, более надежный get-instance
      (assoc m field-sym (get-instance registry target-key)))
    {}
    dep-map))
@@ -75,7 +69,7 @@
       :singleton
       ;; Проверяем сначала, есть ли уже сохраненный инстанс в реестре
       (or (when singleton-atom @singleton-atom)
-          ;; Если нет, то создаем новый *и сохраняем его*
+          ;; Если нет, то создаем новый и сохраняем его
           (create-instance registry key metadata))
 
       :prototype
@@ -109,11 +103,7 @@
 ;;; --- Публичное API ---
 
 (defn add-component!
-  "Добавляет компонент в глобальный реестр.
-  recipe: функция-конструктор.
-  deps: вектор ключей зависимостей (для позиционного сопоставления)
-        или мапа {ключ поля -> ключ зависимости} для именованного.
-  metadata: {:lifecycle :singleton/:prototype}"
+  "Добавляет компонент в глобальный реестр."
   ([key recipe]
    (add-component! key recipe {}))
   ([key recipe metadata]
@@ -123,7 +113,6 @@
   "Удаляет компонент из глобального реестра."
   [key]
   (swap! *registry* unregister key))
-
 
 (defn get-instance*
   "Получает экземпляр компонента из глобального реестра по ключу."
@@ -136,7 +125,6 @@
     (when (= lifecycle :singleton)
       (swap! *registry* assoc-in [:components key :instance] (atom instance)))
     instance))
-
 
 (defn set-injection!
   "Явно задает план внедрения зависимостей для компонента.
