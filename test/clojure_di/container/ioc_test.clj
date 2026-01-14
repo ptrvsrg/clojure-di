@@ -134,3 +134,37 @@
          clojure.lang.ExceptionInfo
          #"Dependency cycle detected"
          (ioc/prioritized-instantiation-order ::a)))))
+
+(deftest test-prioritized-dependencies-ordering
+  (testing "prioritized-dependencies sorts direct deps by priority desc"
+    (ioc/add-component! ::low  (fn [] :low)  {:priority 1})
+    (ioc/add-component! ::mid  (fn [] :mid)  {:priority 10})
+    (ioc/add-component! ::high (fn [] :high) {:priority 100})
+
+    ;; root depends on [low high mid] in that order,
+    ;; but prioritized-dependencies must return [high mid low]
+    (ioc/add-component! ::root
+                        (fn [a b c] {:a a :b b :c c})
+                        {:dependencies [::low ::high ::mid]})
+
+    (is (= [::high ::mid ::low]
+           (ioc/prioritized-dependencies ::root)))))
+
+(deftest test-prioritized-dependencies-default-priority
+  (testing "prioritized-dependencies treats missing :priority as 0"
+    ;; no priority => 0
+    (ioc/add-component! ::no-prio (fn [] :x))
+    (ioc/add-component! ::p1      (fn [] :y) {:priority 1})
+
+    (ioc/add-component! ::root
+                        (fn [a b] {:a a :b b})
+                        {:dependencies [::no-prio ::p1]})
+
+    ;; p1 (1) should go before no-prio (0)
+    (is (= [::p1 ::no-prio]
+           (ioc/prioritized-dependencies ::root)))))
+
+(deftest test-prioritized-dependencies-unknown-component
+  (testing "prioritized-dependencies returns empty vector for unknown component key"
+    (is (= [] (ioc/prioritized-dependencies ::does-not-exist)))))
+
