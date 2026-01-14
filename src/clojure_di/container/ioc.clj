@@ -51,12 +51,25 @@
 (declare create-instance)
 (declare get-instance)
 
-(defn- resolve-dependencies [registry dep-map]
-  (reduce-kv
-   (fn [m field-sym target-key]
-     (assoc m field-sym (get-instance registry target-key)))
-   {}
-   dep-map))
+(defn- resolve-dependencies
+  [registry dep-map]
+  ;; Определение порядка разрешения зависимостей по приоритету
+  (let [priority-order (->> dep-map
+                            vals
+                            (map #(vector % (or (get-in registry [:components % :priority] 0) 0)))
+                            (sort-by second >)
+                            (map first))
+        ;; Создаём временную мапу с уже созданными зависимостями
+        resolved-instances (reduce (fn [m key]
+                                     (assoc m key (get-instance registry key)))
+                                   {}
+                                   priority-order)]
+    ;; Собираем результат, используя временную мапу
+    (reduce-kv
+     (fn [m field-sym target-key]
+       (assoc m field-sym (get resolved-instances target-key)))
+     {}
+     dep-map)))
 
 (defn- get-instance
   "Получает экземпляр компонента по ключу, учитывая его жизненный цикл и зависимости."
@@ -148,3 +161,97 @@
   "Очищает глобальный реестр."
   []
   (reset! *registry* initial-registry))
+
+;; ------------------------------------------------------------
+;; Dependency graph & prioritization (additional features)
+;; ------------------------------------------------------------
+
+(def ^:private default-priority
+  "Приоритет по умолчанию используется, если в метаданных компонента не указан параметр :priority."
+  0)
+
+(defn dependency-graph
+  "Создаёт граф зависимостей на основе реестра (или по умолчанию — глобального реестра).
+
+  Возвращает структуру данных:
+
+  {:nodes    #{:a :b ...}
+   :adj      {:a [:b :c] ...}          ;; edges a -> deps
+   :edges    [{:from :a :to :b} ...]
+   :priority {:a 10 :b 0 ...}}"
+  ([] (dependency-graph @*registry*))
+  ([registry]
+   (let [components (-> registry :components keys set)
+         injections (:injections registry)
+         adj (into {}
+                   (for [k components]
+                     [k (->> (vals (get injections k {}))
+                             distinct
+                             vec)]))
+         edges (->> injections
+                    (mapcat (fn [[from depmap]]
+                              (for [to (vals depmap)]
+                                {:from from :to to})))
+                    vec)
+         priority (into {}
+                        (for [[k meta] (:components registry)]
+                          [k (get meta :priority default-priority)]))]
+     {:nodes components
+      :adj adj
+      :edges edges
+      :priority priority})))
+
+(defn- sort-by-priority-desc
+  "Сортирует коллекцию ключей компонентов по убыванию приоритета, затем по ключу (стабильное разрешение конфликтов)."
+  [priority-map ks]
+  (->> ks
+       (sort-by (fn [k] [(- (long (get priority-map k default-priority))) (pr-str k)]))))
+
+(defn prioritized-dependencies
+  "Возвращает прямые зависимости `component-key`, отсортированные по убыванию приоритета компонента."
+  ([component-key] (prioritized-dependencies @*registry* component-key))
+  ([registry component-key]
+   (let [{:keys [adj priority]} (dependency-graph registry)
+         deps (get adj component-key [])]
+     (vec (sort-by-priority-desc priority deps)))))
+
+(defn prioritized-instantiation-order
+  "Вычисляет порядок создания зависимостей для `root-key` с
+  использованием обхода в глубину (DFS) топологической сортировки,
+  посещая зависимости каждого узла, отсортированные по убыванию :priority.
+  Returns a vector order where dependencies go before dependents.
+  Throws (ex-info ...) on cycle with data {:type :cycle :path [...]}."
+  ([root-key] (prioritized-instantiation-order @*registry* root-key))
+  ([registry root-key]
+   (let [{:keys [adj priority]} (dependency-graph registry)]
+     (letfn [(dfs [node {:keys [temp perm stack _] :as st}]
+               (cond
+                 (contains? perm node) st
+
+                 (contains? temp node)
+                 (throw (ex-info (str "Dependency cycle detected at " (pr-str node))
+                                 {:type :cycle
+                                  :path (conj stack node)}))
+
+                 :else
+                 (let [st' (-> st
+                               (update :temp conj node)
+                               (update :stack conj node))
+                       deps (sort-by-priority-desc priority (get adj node []))
+                       st'' (reduce (fn [acc d] (dfs d acc)) st' deps)]
+                   (-> st''
+                       (update :temp disj node)
+                       (update :perm conj node)
+                       (update :stack pop)
+                       (update :order conj node)))))]
+       (-> (dfs root-key {:temp #{} :perm #{} :stack [] :order []})
+           :order
+           vec)))))
+
+(defn dependency-plan
+  "Удобная обёртка, возвращающая и граф, и порядок создания:
+  {:graph <dependency-graph> :order [...]}"
+  ([root-key] (dependency-plan @*registry* root-key))
+  ([registry root-key]
+   {:graph (dependency-graph registry)
+    :order (prioritized-instantiation-order registry root-key)}))

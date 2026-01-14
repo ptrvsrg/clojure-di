@@ -79,3 +79,58 @@
       (get-instance* ::another)
       (ioc/clear-registry!)
       (is (false? @destructor-called?) "Destructor should NOT be called on clear-registry!"))))
+
+(deftest test-dependency-graph-structure
+  (testing "dependency-graph returns nodes/edges/adj/priority as data"
+    (ioc/add-component! ::a (fn [] :a))
+    (ioc/add-component! ::b (fn [] :b) {:priority 10})
+    (ioc/add-component! ::c (fn [] :c) {:priority 1})
+
+    ;; a depends on b and c
+    (ioc/add-component! ::root (fn [b c] {:b b :c c}) {:dependencies [::b ::c]})
+
+    ;; ensure injections are present (dependencies vector -> positional injection)
+    (let [g (ioc/dependency-graph)]
+      (is (contains? (:nodes g) ::root))
+      (is (= 10 (get-in g [:priority ::b])))
+      (is (= 0  (get-in g [:priority ::a])) "default priority should be 0 when missing")
+      (is (some #{{:from ::root :to ::b}} (:edges g)))
+      (is (some #{{:from ::root :to ::c}} (:edges g)))
+      (is (= (set [::b ::c]) (set (get-in g [:adj ::root])))))))
+
+(deftest test-prioritized-instantiation-order-and_dependency_creation_order
+  (testing "prioritized-instantiation-order respects :priority and dependencies-first"
+    (let [created (atom [])]
+      ;; leaf deps push into created when instantiated
+      (ioc/add-component! ::low  (fn [] (swap! created conj ::low)  :low)  {:priority 1})
+      (ioc/add-component! ::high (fn [] (swap! created conj ::high) :high) {:priority 100})
+
+      ;; root depends on both
+      (ioc/add-component! ::root
+                          (fn [a b]
+                            ;; recipe should run after deps
+                            (swap! created conj ::root)
+                            {:a a :b b})
+                          {:dependencies [::low ::high]})
+
+      ;; 1) check computed plan order
+      (let [order (ioc/prioritized-instantiation-order ::root)]
+        ;; must contain all three
+        (is (= #{::low ::high ::root} (set order)))
+        ;; deps first, root last
+        (is (= ::root (last order))))
+
+      ;; 2) check actual creation order of deps respects priority (high before low),
+      ;; because resolve-dependencies in ioc.clj does get-instance calls in that order.
+      (ioc/get-instance* ::root)
+      (is (= [::high ::low ::root] @created)
+          "Expected dependency creation order: high-priority dep first, then low, then root"))))
+
+(deftest test-cycle-detection-in_plan
+  (testing "prioritized-instantiation-order detects cycles"
+    (ioc/add-component! ::a (fn [b] {:b b}) {:dependencies [::b]})
+    (ioc/add-component! ::b (fn [a] {:a a}) {:dependencies [::a]})
+    (is (thrown-with-msg?
+         clojure.lang.ExceptionInfo
+         #"Dependency cycle detected"
+         (ioc/prioritized-instantiation-order ::a)))))
