@@ -9,6 +9,10 @@
 (def get-instance-for-protocol pinj/get-instance-for-protocol)
 (def register-protocol-impl pinj/register-protocol-impl)
 (def register-java-bean! jinj/register-java-bean!)
+(def dependency-graph ioc/dependency-graph)
+(def prioritized-dependencies ioc/prioritized-dependencies)
+(def prioritized-instantiation-order ioc/prioritized-instantiation-order)
+(def dependency-plan ioc/dependency-plan)
 
 ;; Вспомогательный макрос для удобства
 (defmacro defcomponent
